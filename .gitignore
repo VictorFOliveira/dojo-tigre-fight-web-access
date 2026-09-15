@@ -1,0 +1,29 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Java
+**/target/
+*.class
+*.jar
+*.log
+
+# Node
+**/node_modules/
+**/dist/
+**/.vite/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local databases / Access runtime
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+runtime/
