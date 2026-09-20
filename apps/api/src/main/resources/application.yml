@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: cactus-fight-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cactus_fight}
+    username: ${POSTGRES_USER:cactus}
+    password: ${POSTGRES_PASSWORD:cactus_local}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:15}
+      connection-timeout: 5000
+  flyway:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+
+security:
+  jwt-secret: ${JWT_SECRET:change-this-development-jwt-secret-32chars}
+  mfa-encryption-key: ${MFA_ENCRYPTION_KEY:change-this-development-mfa-key-32chars}
+  require-admin-mfa: ${REQUIRE_ADMIN_MFA:false}
+
+cactus:
+  base-domain: ${CACTUS_FIGHT_BASE_DOMAIN:fight.cactustecnologia.com.br}
+  custom-cname: ${CACTUS_FIGHT_CUSTOM_CNAME:custom.fight.cactustecnologia.com.br}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
