@@ -1,6 +1,8 @@
 spring:
   application:
     name: cactus-fight-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cactus_fight}
     username: ${POSTGRES_USER:cactus}
@@ -19,8 +21,14 @@ security:
   jwt-secret: ${JWT_SECRET:change-this-development-jwt-secret-32chars}
   mfa-encryption-key: ${MFA_ENCRYPTION_KEY:change-this-development-mfa-key-32chars}
   require-admin-mfa: ${REQUIRE_ADMIN_MFA:false}
+  require-platform-mfa: ${REQUIRE_PLATFORM_MFA:true}
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173}
+  rate-limit-api: ${RATE_LIMIT_API:600}
+  rate-limit-login: ${RATE_LIMIT_LOGIN:20}
+  rate-limit-access: ${RATE_LIMIT_ACCESS:300}
 
 cactus:
+  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
   base-domain: ${CACTUS_FIGHT_BASE_DOMAIN:fight.cactustecnologia.com.br}
   custom-cname: ${CACTUS_FIGHT_CUSTOM_CNAME:custom.fight.cactustecnologia.com.br}
 
