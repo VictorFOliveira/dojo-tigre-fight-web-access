@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cactus_fight}
+      POSTGRES_USER: ${POSTGRES_USER:-cactus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cactus_local}
+    expose:
+      - "5432"
+    volumes:
+      - cactus_fight_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U ${POSTGRES_USER:-cactus} -d ${POSTGRES_DB:-cactus_fight}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-development}
+      PORT: 8080
+      DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://db:5432/cactus_fight}
+      POSTGRES_USER: ${POSTGRES_USER:-cactus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cactus_local}
+      DB_POOL_MAX: ${DB_POOL_MAX:-15}
+      JWT_SECRET: ${JWT_SECRET:-change-this-development-jwt-secret-32chars}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:-change-this-development-mfa-key-32chars}
+      REQUIRE_ADMIN_MFA: ${REQUIRE_ADMIN_MFA:-false}
+      REQUIRE_PLATFORM_MFA: ${REQUIRE_PLATFORM_MFA:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      RATE_LIMIT_API: ${RATE_LIMIT_API:-600}
+      RATE_LIMIT_LOGIN: ${RATE_LIMIT_LOGIN:-20}
+      RATE_LIMIT_ACCESS: ${RATE_LIMIT_ACCESS:-300}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:5173}
+      CACTUS_FIGHT_BASE_DOMAIN: ${CACTUS_FIGHT_BASE_DOMAIN:-fight.cactustecnologia.com.br}
+      CACTUS_FIGHT_CUSTOM_CNAME: ${CACTUS_FIGHT_CUSTOM_CNAME:-custom.fight.cactustecnologia.com.br}
+      PLATFORM_ADMIN_NAME: ${PLATFORM_ADMIN_NAME:-Cactus Superadmin}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL:-}
+      PLATFORM_ADMIN_PASSWORD: ${PLATFORM_ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+volumes:
+  cactus_fight_pgdata:
