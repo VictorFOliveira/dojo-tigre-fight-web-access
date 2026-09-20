@@ -27,9 +27,25 @@ public class JwtTenantFilter extends OncePerRequestFilter {
     if(auth==null||!auth.startsWith("Bearer ")){chain.doFilter(req,res);return;}
     try{
       Claims c=jwt.parse(auth.substring(7));
-      if(!"SESSION".equals(c.get("scope",String.class))) throw new IllegalArgumentException();
+      String scope=c.get("scope",String.class);
       UUID userId=UUID.fromString(c.getSubject());
       int av=((Number)c.get("av")).intValue();
+
+      if("PLATFORM".equals(scope)){
+        List<Map<String,Object>> admins=jdbc.queryForList("""
+          select id,name,email,auth_version from platform_admins
+          where id=? and active=true limit 1
+        """,userId);
+        if(admins.size()!=1||((Number)admins.getFirst().get("auth_version")).intValue()!=av) throw new IllegalArgumentException();
+        Map<String,Object> row=admins.getFirst();
+        PlatformUser user=new PlatformUser(userId,String.valueOf(row.get("name")),String.valueOf(row.get("email")),av);
+        var token=new UsernamePasswordAuthenticationToken(user,null,List.of(new SimpleGrantedAuthority("ROLE_PLATFORM_ADMIN")));
+        SecurityContextHolder.getContext().setAuthentication(token);
+        chain.doFilter(req,res);
+        return;
+      }
+
+      if(!"SESSION".equals(scope)) throw new IllegalArgumentException();
       List<Map<String,Object>> rows=jdbc.queryForList("""
         select u.id,u.academy_id,u.name,u.email,u.role,u.auth_version
         from users u join academies a on a.id=u.academy_id
