@@ -41,7 +41,7 @@ public class SecurityConfig {
     return source;
   }
 
-  @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtTenantFilter jwtFilter) throws Exception {
+  @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtTenantFilter jwtFilter,RequestSecurityFilter requestFilter) throws Exception {
     return http
       .csrf(csrf->csrf.disable())
       .cors(Customizer.withDefaults())
@@ -54,6 +54,7 @@ public class SecurityConfig {
       .authorizeHttpRequests(a->a
         .requestMatchers("/api/auth/**","/api/platform/auth/**","/actuator/health","/actuator/info","/api/access/sync").permitAll()
         .anyRequest().authenticated())
+      .addFilterBefore(requestFilter,JwtTenantFilter.class)
       .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class)
       .build();
   }
