@@ -1,0 +1,35 @@
+name: Cactus Fight API CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docker-compose.yml"
+      - ".github/workflows/api-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "docker-compose.yml"
+      - ".github/workflows/api-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Test and package
+        run: mvn -B -f apps/api/pom.xml verify
+      - name: Validate Compose
+        run: docker compose config >/dev/null
+      - name: Build API image
+        run: docker build -t cactus-fight-api:ci apps/api
