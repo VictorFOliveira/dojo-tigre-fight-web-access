@@ -1,6 +1,6 @@
-# DOJÔ TIGRE FIGHT WEB / ACCESS
+# 🐯 Cactus Fight — Web / Access
 
-Plataforma web de administração de dojôs/academias com controle de acesso físico e operação offline.
+Plataforma SaaS multi-tenant para administração de dojôs e academias, com API central, controle de acesso físico e fundação offline-first para o Access Agent.
 
 ## Arquitetura inicial
 
@@ -39,6 +39,33 @@ O TIGRE FIGHT ACCESS mantém cache SQLite local das permissões necessárias. Se
 - Auditoria de decisões de acesso.
 - Hardware e parceiros externos isolados por adapters.
 
+## Fundação implementada
+
+A API central já possui uma base executável em Java 21 / Spring Boot com:
+
+- PostgreSQL + Flyway;
+- isolamento por `academy_id`;
+- autenticação JWT, RBAC e revogação por `auth_version`;
+- MFA TOTP para administrativos e Superadmin;
+- recuperação de senha;
+- Superadmin nominal separado;
+- alunos, matrículas e credenciais de acesso com escopo por tenant;
+- Access Agent com chave armazenada como hash e sincronização idempotente;
+- auditoria;
+- privacidade/LGPD técnica;
+- subdomínio Cactus e domínio próprio verificado;
+- CORS allowlist, security headers, request ID e rate limit;
+- health/metrics/Prometheus;
+- Docker Compose com PostgreSQL privado;
+- CI da API.
+
+Documentação:
+
+- [Segurança](docs/SECURITY.md)
+- [Privacidade/LGPD](docs/PRIVACY.md)
+- [Domínios por academia](docs/DOMAINS.md)
+- [Checklist de produção](docs/PRODUCTION_CHECKLIST.md)
+
 ## Status
 
-Projeto em bootstrap. A primeira etapa é estabelecer contratos, infraestrutura local e módulos-base antes da integração com uma catraca específica.
+**Fundação SaaS/API implementada; produto ainda não está pronto para go-live.** Permanecem o front-end administrativo final, o executável do Access Agent com cache/offline real, homologação de hardware e as integrações externas reais.
