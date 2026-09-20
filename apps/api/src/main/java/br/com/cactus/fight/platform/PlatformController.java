@@ -157,25 +157,30 @@ public class PlatformController {
     Integer planExists=jdbc.queryForObject("select count(*) from saas_plans where code=? and active=true",Integer.class,plan);
     if(planExists==null||planExists==0)return ResponseEntity.badRequest().body(Map.of("error","invalid_plan"));
     if(input.owner()==null)return ResponseEntity.badRequest().body(Map.of("error","owner_required"));
-    try{
-      UUID academyId=jdbc.queryForObject("""
-        insert into academies(slug,legal_name,trade_name,status,plan_code)
-        values (?,?,?,'TRIAL',?) returning id
-      """,UUID.class,input.slug(),input.legalName().trim(),input.tradeName().trim(),plan);
-      UUID ownerId=jdbc.queryForObject("""
-        insert into users(academy_id,name,email,password_hash,role)
-        values (?,?,lower(?),?,'OWNER') returning id
-      """,UUID.class,academyId,input.owner().name().trim(),input.owner().email().trim(),passwords.encode(input.owner().password()));
-      String domain=input.slug()+"."+baseDomain;
-      jdbc.update("""
-        insert into academy_domains(academy_id,domain,kind,verified,is_primary,verified_at)
-        values (?,?,'CACTUS',true,true,now())
-      """,academyId,domain);
-      audit.platform(admin.id(),"PLATFORM_ACADEMY_CREATE","academy",academyId.toString(),Map.of("slug",input.slug(),"plan",plan,"ownerId",ownerId.toString()));
-      return ResponseEntity.status(201).body(Map.of("academyId",academyId,"ownerId",ownerId,"domain",domain,"status","TRIAL","plan",plan));
-    }catch(Exception e){
+    Integer duplicate=jdbc.queryForObject("""
+      select count(*) from academies a
+      where lower(a.slug)=lower(?)
+         or exists(select 1 from users u where lower(u.email)=lower(?))
+    """,Integer.class,input.slug(),input.owner().email().trim());
+    if(duplicate!=null&&duplicate>0){
       return ResponseEntity.status(409).body(Map.of("error","academy_or_owner_already_exists"));
     }
+
+    UUID academyId=jdbc.queryForObject("""
+      insert into academies(slug,legal_name,trade_name,status,plan_code)
+      values (?,?,?,'TRIAL',?) returning id
+    """,UUID.class,input.slug(),input.legalName().trim(),input.tradeName().trim(),plan);
+    UUID ownerId=jdbc.queryForObject("""
+      insert into users(academy_id,name,email,password_hash,role)
+      values (?,?,lower(?),?,'OWNER') returning id
+    """,UUID.class,academyId,input.owner().name().trim(),input.owner().email().trim(),passwords.encode(input.owner().password()));
+    String domain=input.slug()+"."+baseDomain;
+    jdbc.update("""
+      insert into academy_domains(academy_id,domain,kind,verified,is_primary,verified_at)
+      values (?,?,'CACTUS',true,true,now())
+    """,academyId,domain);
+    audit.platform(admin.id(),"PLATFORM_ACADEMY_CREATE","academy",academyId.toString(),Map.of("slug",input.slug(),"plan",plan,"ownerId",ownerId.toString()));
+    return ResponseEntity.status(201).body(Map.of("academyId",academyId,"ownerId",ownerId,"domain",domain,"status","TRIAL","plan",plan));
   }
 
   @PatchMapping("/academies/{id}")
